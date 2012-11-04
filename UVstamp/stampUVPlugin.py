@@ -45,11 +45,10 @@ def stampUV_Init( in_ctxt ):
 def stampUV_Execute(fname,path,uvProj):
 	if uvProj.Count > 0:
 		path = XSIUtils.BuildPath( path, fname+".eps" )
-		print path
 		from psfile import EPSFile
 		X= 1000
 		Y= 1000
-		fd = EPSFile(path, X, Y)
+		fd = EPSFile(path, X, Y, margin=0)
 		for uv in uvProj:
 			if uv.Type == "uvspace":
 				geo = uv.Parent3DObject.Activeprimitive.Geometry
@@ -89,16 +88,25 @@ def stampUV(cback):
 	oColl.SetAsText(proj)
 	
 	# PPG
-	oTempPSet = XSIFactory.CreateObject( "CustomProperty" )
-	oTempPSet.AddParameter3 ("folder", c.siString, XSIUtils.BuildPath( Application.ActiveProject2.Path,"Pictures"))
-	oTempPSet.AddParameter3 ("fileName", c.siString, projName.split(".")[-1])
-	oLayout = oTempPSet.PPGLayout
+	Pset = XSIFactory.CreateObject( "CustomProperty" )
+	Pset.AddParameter3 ("folder", c.siString, XSIUtils.BuildPath( Application.ActiveProject2.Path,"Pictures"))
+	Pset.AddParameter3 ("fileName", c.siString, projName.split(".")[-1])
+	Pset.AddParameter3 ("perUVfile", c.siBool, 1)
+	oLayout = Pset.PPGLayout
 	oLayout.AddItem ("fileName", "fileName")
 	oLayout.AddItem ("folder", "folder", c.siControlFolder)
-	bCancel = xsi.InspectObj( oTempPSet,None,None,c.siModal,False )
+	oLayout.AddItem ("perUVfile", "perUVfile")
+
+	bCancel = xsi.InspectObj( Pset,None,None,c.siModal,False )
 	if bCancel:
 		xsi.Logmessage ("Operation cancelled")
 	else:
-		name =  oTempPSet.fileName.Value
-		path =  oTempPSet.folder.Value
-		xsi.stampUV(name,path,oColl)
+		path =  Pset.folder.Value
+		if Pset.perUVfile.Value ==	 1:
+			for j in oColl:
+				oColl1 = XSIFactory.CreateObject("XSI.Collection")
+				oColl1.Add(j)
+				xsi.stampUV(j.Name, path, oColl1)
+		else:
+			name =  Pset.fileName.Value
+			xsi.stampUV(name, path, oColl)
