@@ -57,7 +57,8 @@ def stampUV_Execute(fname,path,uvProj):
 				aClusterIndices = uv.Parent.elements.Array
 				for face in faces:
 					fId = face.Index
-					fd.append("  % face "+str(fId))
+					#fd.append("  % face "+str(fId))
+					fd.append(" 1 setlinejoin")
 					samples =  face.Samples
 					for i,sample in enumerate(samples):
 						id= sample.Index
